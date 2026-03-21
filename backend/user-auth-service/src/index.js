@@ -3,6 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+
+require('./config/db');
+
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 require('dotenv').config();
