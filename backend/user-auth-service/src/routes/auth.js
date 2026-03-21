@@ -1,34 +1,37 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('../config/db');
+const bcrypt = require('bcrypt');
+const UserRepository = require('../repositories/UserRepository');
 const verifyToken = require('../middleware/auth');
 
 const router = express.Router();
 
-// Register
+// REGISTER
 router.post('/register', async (req, res) => {
-  const { username, email, password, role = 'customer' } = req.body;
+  const { username, email, password, role } = req.body;
+
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id',
-      [username, email, hashedPassword, role]
-    );
-    res.status(201).json({ message: 'User registered', userId: result.rows[0].id });
+    const existingUser = await UserRepository.findByEmail(email);
+    if (existingUser) return res.status(400).json({ message: 'Email already exists' });
+
+    const newUser = await UserRepository.create({ username, email, password, role });
+    res.status(201).json({ 
+      message: 'User registered successfully', 
+      user: newUser.toPublicJSON() 
+    });
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
-// Login
+// LOGIN
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (result.rows.length === 0) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const user = result.rows[0];
+  try {
+    const user = await UserRepository.findByEmail(email);
+    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+
     const validPassword = await bcrypt.compare(password, user.password_hash);
     if (!validPassword) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -44,17 +47,18 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Protected - Get current user (for frontend)
+// GET CURRENT USER (protected)
 router.get('/me', verifyToken, async (req, res) => {
-  const result = await pool.query('SELECT id, username, email, role FROM users WHERE id = $1', [req.user.id]);
-  res.json(result.rows[0]);
+  const user = await UserRepository.findById(req.user.id);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+  res.json(user.toPublicJSON());
 });
 
-// Public endpoint for other microservices (example integration)
+// PUBLIC ENDPOINT (other services call this)
 router.get('/users/:id', verifyToken, async (req, res) => {
-  const result = await pool.query('SELECT id, username, email, role FROM users WHERE id = $1', [req.params.id]);
-  if (result.rows.length === 0) return res.status(404).json({ message: 'User not found' });
-  res.json(result.rows[0]);
+  const user = await UserRepository.getPublicUser(req.params.id);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+  res.json(user.toPublicJSON());
 });
 
 module.exports = router;
