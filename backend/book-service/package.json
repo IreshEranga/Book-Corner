@@ -1,0 +1,24 @@
+{
+  "name": "book-corner-book-service",
+  "version": "1.0.0",
+  "description": "Book Corner - Online Book Store",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shenori-Weerakoon/Book-Corner-book-service.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Shenori-Weerakoon/Book-Corner-book-service/issues"
+  },
+  "homepage": "https://github.com/Shenori-Weerakoon/Book-Corner-book-service#readme"
+}
