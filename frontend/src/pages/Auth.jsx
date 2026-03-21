@@ -1,10 +1,13 @@
+// frontend/src/pages/Auth.jsx
+// UPDATED WITH ROLE-BASED NAVIGATION (Customer / Admin / Owner)
+
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, User, Mail, Lock } from 'lucide-react';
-import Swal from 'sweetalert2';                   
-import 'sweetalert2/dist/sweetalert2.min.css';     
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 import logo from '../assets/logo.png';
 
@@ -35,29 +38,42 @@ function Auth() {
 
     try {
       if (isLogin) {
-        // ==================== LOGIN ====================
+        // ==================== LOGIN WITH ROLE-BASED NAVIGATION ====================
         const res = await axios.post(`${API_BASE}/login`, {
           email: formData.email,
           password: formData.password
         });
 
+        // Store data
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('role', res.data.role);
         localStorage.setItem('userId', res.data.userId);
-        localStorage.setItem('username', res.data.username);
+        // username is not returned from backend yet - using email as fallback
+        localStorage.setItem('username', formData.email.split('@')[0]);
 
-        // SweetAlert + Navigate to Customer Dashboard
+        const role = res.data.role;
+
+        // SweetAlert with role-specific message
         await Swal.fire({
           icon: 'success',
           title: 'Login Successful!',
-          text: `Welcome back, ${res.data.role}! Redirecting to your dashboard...`,
+          text: `Welcome back, ${role.charAt(0).toUpperCase() + role.slice(1)}! Redirecting...`,
           timer: 2200,
           showConfirmButton: false,
           background: '#1e2937',
           color: '#fff'
         });
 
-        navigate('/dashboard');   // ← Customer Dashboard
+        // === ROLE-BASED NAVIGATION ===
+        if (role === 'customer') {
+          navigate('/dashboard');
+        } else if (role === 'admin') {
+          navigate('/admin');
+        } else if (role === 'owner') {
+          navigate('/owner');
+        } else {
+          navigate('/dashboard'); // fallback
+        }
       } else {
         // ==================== REGISTER (CUSTOMER ONLY) ====================
         if (formData.password !== formData.confirmPassword) {
@@ -70,10 +86,9 @@ function Auth() {
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          role: 'customer'          // ← Hardcoded - no role selection
+          role: 'customer'
         });
 
-        // SweetAlert + Switch to Login
         await Swal.fire({
           icon: 'success',
           title: 'Registration Successful!',

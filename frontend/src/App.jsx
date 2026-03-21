@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Auth from './pages/Auth';
 
+import AdminPanel from './pages/Dashboard/AdminPanel';
 /*customer routes*/
 import CustomerDashBoard from './pages/Dashboard/CustomerDashBoard';
 // import Register from './pages/Register';
@@ -21,6 +22,7 @@ function App() {
 
           {/* Customer Routes */}
         <Route path="/dashboard" element={token ? <CustomerDashBoard /> : <Navigate to="/login" />} />
+        <Route path="/admin" element={token ? <AdminPanel /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
