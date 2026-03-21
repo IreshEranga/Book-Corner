@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const USER_API = 'http://localhost:3001/api/auth'; // change to cloud URL later
+const USER_API = 'http://localhost:3001/api/auth';
 
 function Login() {
   const [email, setEmail] = useState('');
