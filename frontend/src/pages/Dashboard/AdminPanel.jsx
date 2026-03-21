@@ -1,3 +1,6 @@
+// frontend/src/pages/AdminPanel.jsx
+// FULLY UPDATED - Overview + Complete Users Management Section
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -14,14 +17,16 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Users, BookOpen, ShoppingCart, BarChart3, LogOut, RefreshCw } from 'lucide-react';
+import { 
+  Users, BookOpen, ShoppingCart, BarChart3, LogOut, RefreshCw, 
+  Edit2, Trash2, Search 
+} from 'lucide-react';
 
 import logo from '../../assets/logo.png';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-//const ADMIN_BASE = API_BASE.replace('/auth', '');
 
 function AdminPanel() {
   const [currentSection, setCurrentSection] = useState('overview');
@@ -31,6 +36,10 @@ function AdminPanel() {
   const [monthlyData, setMonthlyData] = useState([]);
   const [filters, setFilters] = useState({ page: 1, limit: 10, role: '', search: '' });
   const [loading, setLoading] = useState(false);
+
+  // Edit Modal State
+  const [editUser, setEditUser] = useState(null);
+  const [modalForm, setModalForm] = useState({ username: '', email: '', role: 'customer' });
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -44,7 +53,7 @@ function AdminPanel() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      // 1. Users list
+      // 1. Users list with filters
       const params = new URLSearchParams(filters);
       const usersRes = await axios.get(`${API_BASE}/admin/users?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -59,7 +68,7 @@ function AdminPanel() {
       setStats(statsRes.data);
       setMonthlyData(statsRes.data.monthly || []);
     } catch (err) {
-      Swal.fire('Error', 'Failed to load data', 'error');
+      Swal.fire('Error', err.response?.data?.message || 'Failed to load data', 'error');
     } finally {
       setLoading(false);
     }
@@ -69,7 +78,7 @@ function AdminPanel() {
     if (token) fetchAllData();
   }, [filters, token]);
 
-  // Line Chart Data (real)
+  // Line Chart Data
   const chartData = {
     labels: monthlyData.map(item => item.month),
     datasets: [{
@@ -89,6 +98,56 @@ function AdminPanel() {
     { id: 'books', label: 'Books / Products', icon: BookOpen },
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
   ];
+
+  // ==================== FILTERS ====================
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value, page: 1 }));
+  };
+
+  // ==================== EDIT MODAL ====================
+  const openEditModal = (user) => {
+    setEditUser(user);
+    setModalForm({ username: user.username, email: user.email, role: user.role });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.patch(`${API_BASE}/admin/users/${editUser.id}`, modalForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      Swal.fire('Success', 'User updated successfully!', 'success');
+      setEditUser(null);
+      fetchAllData();
+    } catch (err) {
+      Swal.fire('Error', err.response?.data?.message || 'Update failed', 'error');
+    }
+  };
+
+  // ==================== DELETE ====================
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: 'Delete User?',
+      text: 'This action cannot be undone!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Yes, Delete'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axios.delete(`${API_BASE}/admin/users/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        Swal.fire('Deleted!', 'User removed permanently.', 'success');
+        fetchAllData();
+      } catch (err) {
+        Swal.fire('Error', 'Delete failed', 'error');
+      }
+    }
+  };
 
   return (
     <div className="min-vh-100 bg-dark text-white d-flex">
@@ -125,7 +184,6 @@ function AdminPanel() {
 
       {/* MAIN CONTENT */}
       <div className="flex-grow-1 p-4 overflow-auto">
-        {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold">{menuItems.find(m => m.id === currentSection).label}</h2>
           <button onClick={fetchAllData} className="btn btn-outline-light d-flex align-items-center gap-2">
@@ -133,16 +191,14 @@ function AdminPanel() {
           </button>
         </div>
 
-        {/* OVERVIEW SECTION */}
+        {/* ==================== OVERVIEW SECTION ==================== */}
         {currentSection === 'overview' && (
           <div className="row g-4">
-            {/* Stats Cards */}
             <div className="col-md-3"><div className="card bg-black h-100 text-center p-4"><h2 className="text-purple">{stats.total_users}</h2><small>Total Users</small></div></div>
             <div className="col-md-3"><div className="card bg-black h-100 text-center p-4"><h2 className="text-success">{stats.customers}</h2><small>Customers</small></div></div>
             <div className="col-md-3"><div className="card bg-black h-100 text-center p-4"><h2 className="text-warning">{stats.owners}</h2><small>Owners</small></div></div>
             <div className="col-md-3"><div className="card bg-black h-100 text-center p-4"><h2 className="text-danger">{stats.admins}</h2><small>Admins</small></div></div>
 
-            {/* Real Line Chart */}
             <div className="col-12">
               <div className="card bg-black p-4">
                 <h5>New Users This Year (Real Data)</h5>
@@ -152,40 +208,154 @@ function AdminPanel() {
           </div>
         )}
 
-        {/* USERS SECTION */}
+        {/* ==================== USERS MANAGEMENT SECTION (FULL) ==================== */}
         {currentSection === 'users' && (
-          <div className="card bg-black">
-            {/* Filters + Table (same as before but cleaner) */}
-            {/* ... (I kept the full table from previous version for brevity - you already have it) */}
-            {/* You can paste your previous users table code here if you want - it's unchanged */}
-          </div>
+          <>
+            {/* Filters */}
+            <div className="card bg-black mb-4">
+              <div className="card-body">
+                <div className="row g-3">
+                  <div className="col-md-5">
+                    <div className="input-group">
+                      <span className="input-group-text bg-dark text-white"><Search size={18} /></span>
+                      <input
+                        type="text"
+                        name="search"
+                        placeholder="Search username or email..."
+                        className="form-control bg-dark text-white border-0"
+                        value={filters.search}
+                        onChange={handleFilterChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <select name="role" className="form-select bg-dark text-white border-0" value={filters.role} onChange={handleFilterChange}>
+                      <option value="">All Roles</option>
+                      <option value="customer">Customer</option>
+                      <option value="owner">Owner</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2">
+                    <button onClick={fetchAllData} className="btn btn-primary w-100">Apply Filter</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Users Table */}
+            <div className="card bg-black">
+              <div className="table-responsive">
+                <table className="table table-dark table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Joined</th>
+                      <th className="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr><td colSpan="6" className="text-center py-5">Loading users...</td></tr>
+                    ) : users.length === 0 ? (
+                      <tr><td colSpan="6" className="text-center py-5">No users found</td></tr>
+                    ) : (
+                      users.map(user => (
+                        <tr key={user.id}>
+                          <td>{user.id}</td>
+                          <td>{user.username}</td>
+                          <td>{user.email}</td>
+                          <td>
+                            <span className={`badge ${user.role === 'admin' ? 'bg-danger' : user.role === 'owner' ? 'bg-warning' : 'bg-success'}`}>
+                              {user.role}
+                            </span>
+                          </td>
+                          <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                          <td className="text-end">
+                            <button onClick={() => openEditModal(user)} className="btn btn-sm btn-outline-light me-2">
+                              <Edit2 size={16} />
+                            </button>
+                            <button onClick={() => handleDelete(user.id)} className="btn btn-sm btn-outline-danger">
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="card-footer bg-black border-0 d-flex justify-content-between align-items-center p-3">
+                <span>Page {pagination.page} of {pagination.totalPages}</span>
+                <div>
+                  <button disabled={pagination.page === 1} onClick={() => setFilters(p => ({...p, page: p.page-1}))} className="btn btn-outline-light btn-sm me-2">Previous</button>
+                  <button disabled={pagination.page === pagination.totalPages} onClick={() => setFilters(p => ({...p, page: p.page+1}))} className="btn btn-outline-light btn-sm">Next</button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
-        {/* BOOKS / PRODUCTS SECTION (Placeholder - ready for product service) */}
+        {/* BOOKS & ORDERS PLACEHOLDERS (ready for future) */}
         {currentSection === 'books' && (
           <div className="text-center py-5">
             <BookOpen size={80} className="text-purple mb-4" />
             <h3>Books / Product Catalog</h3>
-            <p className="lead text-white-50">Connect to <strong>product-catalog-service</strong> API</p>
-            <div className="alert alert-info d-inline-block">
-              Future endpoint: <code>/api/products</code><br />
-              Add CRUD table here later
-            </div>
+            <p className="lead text-white-50">Coming soon - connect to product-catalog-service</p>
           </div>
         )}
 
-        {/* ORDERS SECTION (Placeholder) */}
         {currentSection === 'orders' && (
           <div className="text-center py-5">
             <ShoppingCart size={80} className="text-purple mb-4" />
             <h3>Orders Management</h3>
-            <p className="lead text-white-50">Connect to <strong>order-service</strong></p>
-            <div className="alert alert-info d-inline-block">
-              Future endpoint: <code>/api/orders</code>
-            </div>
+            <p className="lead text-white-50">Coming soon - connect to order-service</p>
           </div>
         )}
       </div>
+
+      {/* ==================== EDIT MODAL ==================== */}
+      {editUser && (
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content bg-dark text-white">
+              <div className="modal-header border-0">
+                <h5>Edit User #{editUser.id}</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setEditUser(null)}></button>
+              </div>
+              <form onSubmit={handleEditSubmit}>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label>Username</label>
+                    <input type="text" className="form-control bg-black text-white" value={modalForm.username} onChange={e => setModalForm({...modalForm, username: e.target.value})} />
+                  </div>
+                  <div className="mb-3">
+                    <label>Email</label>
+                    <input type="email" className="form-control bg-black text-white" value={modalForm.email} onChange={e => setModalForm({...modalForm, email: e.target.value})} />
+                  </div>
+                  <div className="mb-3">
+                    <label>Role</label>
+                    <select className="form-select bg-black text-white" value={modalForm.role} onChange={e => setModalForm({...modalForm, role: e.target.value})}>
+                      <option value="customer">Customer</option>
+                      <option value="owner">Owner</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="modal-footer border-0">
+                  <button type="button" className="btn btn-secondary" onClick={() => setEditUser(null)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary">Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
