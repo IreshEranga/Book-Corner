@@ -145,6 +145,19 @@ class UserRepository {
     `);
     return result.rows[0];
   }
+
+  static async getMonthlyNewUsers() {
+    const result = await pool.query(`
+      SELECT 
+        TO_CHAR(created_at, 'Mon') AS month,
+        COUNT(*) AS count
+      FROM users
+      WHERE created_at >= CURRENT_DATE - INTERVAL '6 months'
+      GROUP BY TO_CHAR(created_at, 'Mon'), DATE_TRUNC('month', created_at)
+      ORDER BY DATE_TRUNC('month', created_at)
+    `);
+    return result.rows;
+  }
 }
 
 module.exports = UserRepository;

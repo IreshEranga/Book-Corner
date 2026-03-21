@@ -6,10 +6,24 @@ const adminAuth = require('../middleware/admin');
 const router = express.Router();
 
 // ALL ROUTES BELOW ARE ADMIN ONLY
-router.use(verifyToken);   // first check login
-router.use(adminAuth);     // then check admin role
+router.use(verifyToken);
+router.use(adminAuth);
 
-// GET ALL USERS + FILTERING + PAGINATION
+// 1. STATS + MONTHLY CHART (must be FIRST)
+router.get('/stats', async (req, res) => {
+  try {
+    const stats = await UserRepository.getStats();
+    const monthly = await UserRepository.getMonthlyNewUsers();
+    res.json({ 
+      ...stats, 
+      monthly 
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// 2. GET ALL USERS WITH FILTERS + PAGINATION
 router.get('/', async (req, res) => {
   try {
     const filters = {
@@ -30,7 +44,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET SINGLE USER (admin view)
+// 3. GET SINGLE USER
 router.get('/:id', async (req, res) => {
   try {
     const user = await UserRepository.findById(req.params.id);
@@ -41,7 +55,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// UPDATE USER
+// 4. UPDATE USER
 router.patch('/:id', async (req, res) => {
   try {
     const updatedUser = await UserRepository.update(req.params.id, req.body);
@@ -52,22 +66,12 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// DELETE USER
+// 5. DELETE USER
 router.delete('/:id', async (req, res) => {
   try {
     const deleted = await UserRepository.delete(req.params.id);
     if (!deleted) return res.status(404).json({ message: 'User not found' });
     res.json({ message: 'User deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// GET STATS
-router.get('/stats', async (req, res) => {
-  try {
-    const stats = await UserRepository.getStats();
-    res.json(stats);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

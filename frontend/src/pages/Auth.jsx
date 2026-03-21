@@ -11,7 +11,7 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 
 import logo from '../assets/logo.png';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/auth';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -39,7 +39,7 @@ function Auth() {
     try {
       if (isLogin) {
         // ==================== LOGIN WITH ROLE-BASED NAVIGATION ====================
-        const res = await axios.post(`${API_BASE}/login`, {
+        const res = await axios.post(`${API_BASE}/auth/login`, {
           email: formData.email,
           password: formData.password
         });
@@ -82,7 +82,7 @@ function Auth() {
           return;
         }
 
-        await axios.post(`${API_BASE}/register`, {
+        await axios.post(`${API_BASE}/auth/register`, {
           username: formData.username,
           email: formData.email,
           password: formData.password,
