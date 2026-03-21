@@ -21,7 +21,7 @@ import {
   Users, BookOpen, ShoppingCart, BarChart3, LogOut, RefreshCw, 
   Edit2, Trash2, Search 
 } from 'lucide-react';
-
+import BookManagement from '../Components/Admin/BookManagement';
 import logo from '../../assets/logo.png';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -265,8 +265,17 @@ function AdminPanel() {
           </>
         )}
 
-        {/* Books & Orders Placeholders */}
-        {currentSection === 'books' && <div className="text-center py-5"><BookOpen size={80} className="text-purple mb-4" /><h3>Books / Products</h3><p className="text-white-50">Coming soon...</p></div>}
+        {/* Book Service Component */}
+        {currentSection === 'books' && 
+        
+          <div className="text-center py-5">
+            <BookManagement />
+          </div>
+          
+        }
+
+
+        {/* Orders Placeholders */}
         {currentSection === 'orders' && <div className="text-center py-5"><ShoppingCart size={80} className="text-purple mb-4" /><h3>Orders</h3><p className="text-white-50">Coming soon...</p></div>}
       </div>
 
