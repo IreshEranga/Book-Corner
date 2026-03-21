@@ -1,5 +1,5 @@
 // frontend/src/pages/AdminPanel.jsx
-// FULLY UPDATED - Overview + Complete Users Management Section
+// UPDATED WITH STICKY SIDEBAR (never scrolls away)
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -37,7 +37,6 @@ function AdminPanel() {
   const [filters, setFilters] = useState({ page: 1, limit: 10, role: '', search: '' });
   const [loading, setLoading] = useState(false);
 
-  // Edit Modal State
   const [editUser, setEditUser] = useState(null);
   const [modalForm, setModalForm] = useState({ username: '', email: '', role: 'customer' });
 
@@ -45,7 +44,6 @@ function AdminPanel() {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
 
-  // Protect route
   useEffect(() => {
     if (!token || role !== 'admin') navigate('/login');
   }, [token, role, navigate]);
@@ -53,7 +51,6 @@ function AdminPanel() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      // 1. Users list with filters
       const params = new URLSearchParams(filters);
       const usersRes = await axios.get(`${API_BASE}/admin/users?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -61,7 +58,6 @@ function AdminPanel() {
       setUsers(usersRes.data.users || []);
       setPagination(usersRes.data.pagination || {});
 
-      // 2. Stats + Monthly (real data)
       const statsRes = await axios.get(`${API_BASE}/admin/users/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -78,7 +74,6 @@ function AdminPanel() {
     if (token) fetchAllData();
   }, [filters, token]);
 
-  // Line Chart Data
   const chartData = {
     labels: monthlyData.map(item => item.month),
     datasets: [{
@@ -91,7 +86,6 @@ function AdminPanel() {
     }]
   };
 
-  // Sidebar Menu
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'users', label: 'Users Management', icon: Users },
@@ -99,13 +93,11 @@ function AdminPanel() {
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
   ];
 
-  // ==================== FILTERS ====================
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value, page: 1 }));
   };
 
-  // ==================== EDIT MODAL ====================
   const openEditModal = (user) => {
     setEditUser(user);
     setModalForm({ username: user.username, email: user.email, role: user.role });
@@ -117,7 +109,7 @@ function AdminPanel() {
       await axios.patch(`${API_BASE}/admin/users/${editUser.id}`, modalForm, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      Swal.fire('Success', 'User updated successfully!', 'success');
+      Swal.fire('Success', 'User updated!', 'success');
       setEditUser(null);
       fetchAllData();
     } catch (err) {
@@ -125,23 +117,15 @@ function AdminPanel() {
     }
   };
 
-  // ==================== DELETE ====================
   const handleDelete = async (id) => {
     const result = await Swal.fire({
-      title: 'Delete User?',
-      text: 'This action cannot be undone!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      confirmButtonText: 'Yes, Delete'
+      title: 'Delete User?', text: 'This cannot be undone!', icon: 'warning',
+      showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes, Delete'
     });
-
     if (result.isConfirmed) {
       try {
-        await axios.delete(`${API_BASE}/admin/users/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        Swal.fire('Deleted!', 'User removed permanently.', 'success');
+        await axios.delete(`${API_BASE}/admin/users/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        Swal.fire('Deleted!', 'User removed.', 'success');
         fetchAllData();
       } catch (err) {
         Swal.fire('Error', 'Delete failed', 'error');
@@ -151,8 +135,11 @@ function AdminPanel() {
 
   return (
     <div className="min-vh-100 bg-dark text-white d-flex">
-      {/* SIDEBAR */}
-      <div className="col-lg-2 bg-black border-end border-white-10 p-4 d-none d-lg-flex flex-column">
+      {/* ==================== STICKY SIDEBAR ==================== */}
+      <div 
+        className="col-lg-2 bg-black border-end border-white-10 p-4 d-none d-lg-flex flex-column position-sticky top-0"
+        style={{ height: '100vh', overflowY: 'auto' }}
+      >
         <div className="d-flex align-items-center gap-3 mb-5">
           <img src={logo} width="48" className="rounded-circle" />
           <h4 className="text-purple fw-bold mb-0">BookCorner Admin</h4>
@@ -175,15 +162,18 @@ function AdminPanel() {
           })}
         </div>
 
-        <div className="mt-auto">
-          <button onClick={() => navigate('/login')} className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
+        <div className="mt-auto pt-4">
+          <button 
+            onClick={() => navigate('/login')} 
+            className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2"
+          >
             <LogOut size={18} /> Logout
           </button>
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
-      <div className="flex-grow-1 p-4 overflow-auto">
+      {/* ==================== MAIN SCROLLABLE CONTENT ==================== */}
+      <div className="flex-grow-1 p-4 overflow-auto" style={{ height: '100vh' }}>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold">{menuItems.find(m => m.id === currentSection).label}</h2>
           <button onClick={fetchAllData} className="btn btn-outline-light d-flex align-items-center gap-2">
@@ -191,7 +181,7 @@ function AdminPanel() {
           </button>
         </div>
 
-        {/* ==================== OVERVIEW SECTION ==================== */}
+        {/* Overview Section */}
         {currentSection === 'overview' && (
           <div className="row g-4">
             <div className="col-md-3"><div className="card bg-black h-100 text-center p-4"><h2 className="text-purple">{stats.total_users}</h2><small>Total Users</small></div></div>
@@ -208,7 +198,7 @@ function AdminPanel() {
           </div>
         )}
 
-        {/* ==================== USERS MANAGEMENT SECTION (FULL) ==================== */}
+        {/* Users Management Section - Full Table */}
         {currentSection === 'users' && (
           <>
             {/* Filters */}
@@ -218,14 +208,7 @@ function AdminPanel() {
                   <div className="col-md-5">
                     <div className="input-group">
                       <span className="input-group-text bg-dark text-white"><Search size={18} /></span>
-                      <input
-                        type="text"
-                        name="search"
-                        placeholder="Search username or email..."
-                        className="form-control bg-dark text-white border-0"
-                        value={filters.search}
-                        onChange={handleFilterChange}
-                      />
+                      <input type="text" name="search" placeholder="Search username or email..." className="form-control bg-dark text-white border-0" value={filters.search} onChange={handleFilterChange} />
                     </div>
                   </div>
                   <div className="col-md-3">
@@ -243,54 +226,35 @@ function AdminPanel() {
               </div>
             </div>
 
-            {/* Users Table */}
+            {/* Table + Pagination */}
             <div className="card bg-black">
               <div className="table-responsive">
                 <table className="table table-dark table-hover mb-0">
                   <thead>
                     <tr>
-                      <th>ID</th>
-                      <th>Username</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Joined</th>
-                      <th className="text-end">Actions</th>
+                      <th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th className="text-end">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {loading ? (
-                      <tr><td colSpan="6" className="text-center py-5">Loading users...</td></tr>
-                    ) : users.length === 0 ? (
-                      <tr><td colSpan="6" className="text-center py-5">No users found</td></tr>
-                    ) : (
-                      users.map(user => (
-                        <tr key={user.id}>
-                          <td>{user.id}</td>
-                          <td>{user.username}</td>
-                          <td>{user.email}</td>
-                          <td>
-                            <span className={`badge ${user.role === 'admin' ? 'bg-danger' : user.role === 'owner' ? 'bg-warning' : 'bg-success'}`}>
-                              {user.role}
-                            </span>
-                          </td>
-                          <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                          <td className="text-end">
-                            <button onClick={() => openEditModal(user)} className="btn btn-sm btn-outline-light me-2">
-                              <Edit2 size={16} />
-                            </button>
-                            <button onClick={() => handleDelete(user.id)} className="btn btn-sm btn-outline-danger">
-                              <Trash2 size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
+                    {loading ? <tr><td colSpan="6" className="text-center py-5">Loading...</td></tr> : 
+                     users.length === 0 ? <tr><td colSpan="6" className="text-center py-5">No users found</td></tr> :
+                     users.map(user => (
+                       <tr key={user.id}>
+                         <td>{user.id}</td>
+                         <td>{user.username}</td>
+                         <td>{user.email}</td>
+                         <td><span className={`badge ${user.role === 'admin' ? 'bg-danger' : user.role === 'owner' ? 'bg-warning' : 'bg-success'}`}>{user.role}</span></td>
+                         <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                         <td className="text-end">
+                           <button onClick={() => openEditModal(user)} className="btn btn-sm btn-outline-light me-2"><Edit2 size={16} /></button>
+                           <button onClick={() => handleDelete(user.id)} className="btn btn-sm btn-outline-danger"><Trash2 size={16} /></button>
+                         </td>
+                       </tr>
+                     ))}
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              <div className="card-footer bg-black border-0 d-flex justify-content-between align-items-center p-3">
+              <div className="card-footer bg-black d-flex justify-content-between p-3">
                 <span>Page {pagination.page} of {pagination.totalPages}</span>
                 <div>
                   <button disabled={pagination.page === 1} onClick={() => setFilters(p => ({...p, page: p.page-1}))} className="btn btn-outline-light btn-sm me-2">Previous</button>
@@ -301,45 +265,22 @@ function AdminPanel() {
           </>
         )}
 
-        {/* BOOKS & ORDERS PLACEHOLDERS (ready for future) */}
-        {currentSection === 'books' && (
-          <div className="text-center py-5">
-            <BookOpen size={80} className="text-purple mb-4" />
-            <h3>Books / Product Catalog</h3>
-            <p className="lead text-white-50">Coming soon - connect to product-catalog-service</p>
-          </div>
-        )}
-
-        {currentSection === 'orders' && (
-          <div className="text-center py-5">
-            <ShoppingCart size={80} className="text-purple mb-4" />
-            <h3>Orders Management</h3>
-            <p className="lead text-white-50">Coming soon - connect to order-service</p>
-          </div>
-        )}
+        {/* Books & Orders Placeholders */}
+        {currentSection === 'books' && <div className="text-center py-5"><BookOpen size={80} className="text-purple mb-4" /><h3>Books / Products</h3><p className="text-white-50">Coming soon...</p></div>}
+        {currentSection === 'orders' && <div className="text-center py-5"><ShoppingCart size={80} className="text-purple mb-4" /><h3>Orders</h3><p className="text-white-50">Coming soon...</p></div>}
       </div>
 
-      {/* ==================== EDIT MODAL ==================== */}
+      {/* EDIT MODAL */}
       {editUser && (
         <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.85)' }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content bg-dark text-white">
-              <div className="modal-header border-0">
-                <h5>Edit User #{editUser.id}</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setEditUser(null)}></button>
-              </div>
+              <div className="modal-header border-0"><h5>Edit User #{editUser.id}</h5><button className="btn-close btn-close-white" onClick={() => setEditUser(null)}></button></div>
               <form onSubmit={handleEditSubmit}>
                 <div className="modal-body">
-                  <div className="mb-3">
-                    <label>Username</label>
-                    <input type="text" className="form-control bg-black text-white" value={modalForm.username} onChange={e => setModalForm({...modalForm, username: e.target.value})} />
-                  </div>
-                  <div className="mb-3">
-                    <label>Email</label>
-                    <input type="email" className="form-control bg-black text-white" value={modalForm.email} onChange={e => setModalForm({...modalForm, email: e.target.value})} />
-                  </div>
-                  <div className="mb-3">
-                    <label>Role</label>
+                  <div className="mb-3"><label>Username</label><input type="text" className="form-control bg-black text-white" value={modalForm.username} onChange={e => setModalForm({...modalForm, username: e.target.value})} /></div>
+                  <div className="mb-3"><label>Email</label><input type="email" className="form-control bg-black text-white" value={modalForm.email} onChange={e => setModalForm({...modalForm, email: e.target.value})} /></div>
+                  <div className="mb-3"><label>Role</label>
                     <select className="form-select bg-black text-white" value={modalForm.role} onChange={e => setModalForm({...modalForm, role: e.target.value})}>
                       <option value="customer">Customer</option>
                       <option value="owner">Owner</option>
