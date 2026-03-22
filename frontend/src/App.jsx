@@ -8,6 +8,8 @@ import CustomerDashBoard from './pages/Dashboard/CustomerDashBoard';
 // import Register from './pages/Register';
 // import Dashboard from './pages/Dashboard';
 
+import OrderPage from './pages/Components/Customer/OrderPage';
+
 function App() {
   const token = localStorage.getItem('token');
 
@@ -23,6 +25,8 @@ function App() {
           {/* Customer Routes */}
         <Route path="/dashboard" element={token ? <CustomerDashBoard /> : <Navigate to="/login" />} />
         <Route path="/admin" element={token ? <AdminPanel /> : <Navigate to="/login" />} />
+
+        <Route path="/order" element={token ? <OrderPage /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
