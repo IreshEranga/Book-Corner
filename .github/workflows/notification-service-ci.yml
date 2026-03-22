@@ -1,0 +1,41 @@
+name: Notification Service CI
+
+on:
+  push:
+    paths:
+      - "backend/notification-service/**"
+      - ".github/workflows/notification-service-ci.yml"
+  pull_request:
+    paths:
+      - "backend/notification-service/**"
+      - ".github/workflows/notification-service-ci.yml"
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/notification-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/notification-service/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        env:
+          INTERNAL_JWT_SECRET: ci-internal-secret
+          USER_JWT_SECRET: ci-user-secret
+        run: npm test
+
+      - name: Docker build
+        run: docker build -t notification-service:ci .
