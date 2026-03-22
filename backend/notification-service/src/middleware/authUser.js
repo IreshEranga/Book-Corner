@@ -10,9 +10,15 @@ function authUser(req, res, next) {
   }
 
   const token = authHeader.slice(7);
+  // COLLAB-SAFE: Support USER_JWT_SECRET and fallback JWT_SECRET for cross-service compatibility.
+  const userSecret = process.env.USER_JWT_SECRET || process.env.JWT_SECRET;
+
+  if (!userSecret) {
+    return res.status(500).json({ message: "User auth secret not configured" });
+  }
 
   try {
-    const decoded = jwt.verify(token, process.env.USER_JWT_SECRET);
+    const decoded = jwt.verify(token, userSecret);
     req.user = {
       id: decoded.id || decoded.userId,
       role: decoded.role || "customer",

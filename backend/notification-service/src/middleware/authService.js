@@ -11,7 +11,20 @@ function authService(req, res, next) {
 
   const token = authHeader.slice(7);
 
+  // COLLAB-SAFE: Allow shared static service token as lightweight integration path.
+  if (
+    process.env.INTERNAL_SERVICE_TOKEN &&
+    token === process.env.INTERNAL_SERVICE_TOKEN
+  ) {
+    req.service = {
+      name: req.headers["x-service-name"] || "unknown-service",
+      scope: "internal",
+    };
+    return next();
+  }
+
   try {
+    // COLLAB-SAFE: JWT path remains supported for stronger service auth.
     const decoded = jwt.verify(token, process.env.INTERNAL_JWT_SECRET);
     req.service = {
       name: decoded.service || "unknown-service",

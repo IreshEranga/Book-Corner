@@ -1,20 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
-import Swal from 'sweetalert2';
-import { Bell, CheckCheck } from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
+import { Bell, CheckCheck } from "lucide-react";
 
 const NOTIFICATION_API =
-  import.meta.env.VITE_NOTIFICATION_API || 'http://localhost:3004/api/notifications';
+  import.meta.env.VITE_NOTIFICATION_API ||
+  "http://localhost:3004/api/notifications";
 
 function NotificationPanel() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
 
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.readAt).length,
-    [notifications]
+    [notifications],
   );
 
   const fetchNotifications = async () => {
@@ -29,7 +30,7 @@ function NotificationPanel() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to load notifications');
+        throw new Error("Failed to load notifications");
       }
 
       const data = await response.json();
@@ -37,11 +38,11 @@ function NotificationPanel() {
     } catch (error) {
       console.error(error);
       Swal.fire({
-        icon: 'error',
-        title: 'Notification Error',
-        text: 'Could not load notifications.',
-        background: '#1e2937',
-        color: '#fff',
+        icon: "error",
+        title: "Notification Error",
+        text: "Could not load notifications.",
+        background: "#1e2937",
+        color: "#fff",
       });
     } finally {
       setLoading(false);
@@ -59,29 +60,31 @@ function NotificationPanel() {
   const markAsRead = async (id) => {
     try {
       const response = await fetch(`${NOTIFICATION_API}/${id}/read`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to mark as read');
+        throw new Error("Failed to mark as read");
       }
 
       setNotifications((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, readAt: new Date().toISOString(), status: 'read' } : item
-        )
+          item._id === id
+            ? { ...item, readAt: new Date().toISOString(), status: "read" }
+            : item,
+        ),
       );
     } catch (error) {
       console.error(error);
       Swal.fire({
-        icon: 'error',
-        title: 'Update Failed',
-        text: 'Could not mark notification as read.',
-        background: '#1e2937',
-        color: '#fff',
+        icon: "error",
+        title: "Update Failed",
+        text: "Could not mark notification as read.",
+        background: "#1e2937",
+        color: "#fff",
       });
     }
   };
@@ -99,13 +102,16 @@ function NotificationPanel() {
         <Bell size={18} />
         {unreadCount > 0 && (
           <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.75)' }}>
+        <div
+          className="modal show d-block"
+          style={{ background: "rgba(0,0,0,0.75)" }}
+        >
           <div className="modal-dialog modal-dialog-scrollable modal-md modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
               <div className="modal-header border-secondary">
@@ -122,7 +128,10 @@ function NotificationPanel() {
               <div className="modal-body">
                 {loading ? (
                   <div className="text-center py-4">
-                    <div className="spinner-border text-light" role="status"></div>
+                    <div
+                      className="spinner-border text-light"
+                      role="status"
+                    ></div>
                   </div>
                 ) : notifications.length === 0 ? (
                   <p className="text-white-50 mb-0">No notifications yet.</p>
@@ -136,7 +145,9 @@ function NotificationPanel() {
                         <div className="d-flex justify-content-between align-items-start gap-2">
                           <div>
                             <h6 className="mb-1">{item.title}</h6>
-                            <p className="mb-1 small text-white-50">{item.message}</p>
+                            <p className="mb-1 small text-white-50">
+                              {item.message}
+                            </p>
                             <small className="text-white-50">
                               {new Date(item.createdAt).toLocaleString()}
                             </small>
@@ -158,10 +169,16 @@ function NotificationPanel() {
               </div>
 
               <div className="modal-footer border-secondary">
-                <button className="btn btn-outline-light" onClick={fetchNotifications}>
+                <button
+                  className="btn btn-outline-light"
+                  onClick={fetchNotifications}
+                >
                   Refresh
                 </button>
-                <button className="btn btn-secondary" onClick={() => setOpen(false)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setOpen(false)}
+                >
                   Close
                 </button>
               </div>

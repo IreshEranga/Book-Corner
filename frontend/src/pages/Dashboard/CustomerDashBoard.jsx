@@ -133,32 +133,33 @@
 
 // export default CustomerDashBoard;
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
-import { User, LogOut, BookOpen, ShoppingBag, Box, Eye } from 'lucide-react';
-import logo from '../../assets/logo.png';
-import BookStoreHome from '../Components/Customer/BookStoreHome';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import { User, LogOut, BookOpen, ShoppingBag, Box, Eye } from "lucide-react";
+import logo from "../../assets/logo.png";
+import BookStoreHome from "../Components/Customer/BookStoreHome";
 // COLLAB-SAFE: Added notification UI component import.
-import NotificationPanel from '../Components/Customer/NotificationPanel';
+import NotificationPanel from "../Components/Customer/NotificationPanel";
 
-const ORDER_API = import.meta.env.VITE_ORDER_API || 'http://localhost:3003/api/orders';
+const ORDER_API =
+  import.meta.env.VITE_ORDER_API || "http://localhost:3003/api/orders";
 
 function CustomerDashBoard() {
-  const [user, setUser] = useState({ username: '', role: 'customer' });
-  const [activeTab, setActiveTab] = useState('home'); // 'home' or 'orders'
+  const [user, setUser] = useState({ username: "", role: "customer" });
+  const [activeTab, setActiveTab] = useState("home"); // 'home' or 'orders'
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username') || 'BookLover';
-    const role = localStorage.getItem('role') || 'customer';
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username") || "BookLover";
+    const role = localStorage.getItem("role") || "customer";
 
     if (!token) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -167,15 +168,15 @@ function CustomerDashBoard() {
 
   // Fetch orders when the tab switches to 'orders'
   useEffect(() => {
-    if (activeTab === 'orders') {
+    if (activeTab === "orders") {
       fetchMyOrders();
     }
   }, [activeTab]);
 
   const fetchMyOrders = async () => {
     setLoadingOrders(true);
-    const token = localStorage.getItem('token');
-    
+    const token = localStorage.getItem("token");
+
     try {
       const response = await fetch(`${ORDER_API}/my`, {
         headers: {
@@ -183,18 +184,18 @@ function CustomerDashBoard() {
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      
+      if (!response.ok) throw new Error("Failed to fetch orders");
+
       const data = await response.json();
       setOrders(data);
     } catch (error) {
       console.error(error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Could not load your orders.',
-        background: '#1e2937',
-        color: '#fff',
+        icon: "error",
+        title: "Error",
+        text: "Could not load your orders.",
+        background: "#1e2937",
+        color: "#fff",
       });
     } finally {
       setLoadingOrders(false);
@@ -203,31 +204,37 @@ function CustomerDashBoard() {
 
   const handleLogout = () => {
     Swal.fire({
-      title: 'Logout?',
-      text: 'You will be redirected to login page.',
-      icon: 'warning',
+      title: "Logout?",
+      text: "You will be redirected to login page.",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: '#7c3aed',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Logout',
-      background: '#1e2937',
-      color: '#fff',
+      confirmButtonColor: "#7c3aed",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, Logout",
+      background: "#1e2937",
+      color: "#fff",
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.clear();
-        navigate('/login');
+        navigate("/login");
       }
     });
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'warning';
-      case 'confirmed': return 'info';
-      case 'shipped': return 'primary';
-      case 'delivered': return 'success';
-      case 'cancelled': return 'danger';
-      default: return 'secondary';
+      case "pending":
+        return "warning";
+      case "confirmed":
+        return "info";
+      case "shipped":
+        return "primary";
+      case "delivered":
+        return "success";
+      case "cancelled":
+        return "danger";
+      default:
+        return "secondary";
     }
   };
 
@@ -237,7 +244,12 @@ function CustomerDashBoard() {
       <nav className="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow">
         <div className="container">
           <div className="d-flex align-items-center gap-3">
-            <img src={logo} alt="BookCorner" width="45" className="rounded-circle" />
+            <img
+              src={logo}
+              alt="BookCorner"
+              width="45"
+              className="rounded-circle"
+            />
             <h4 className="mb-0 fw-bold text-purple">BookCorner</h4>
           </div>
 
@@ -266,7 +278,7 @@ function CustomerDashBoard() {
         <div className="row">
           {/* LEFT SIDEBAR - Controls */}
           <div className="col-lg-3 mb-4 mb-lg-0">
-             <div className="sticky-top" style={{ top: '90px' }}>
+            <div className="sticky-top" style={{ top: "90px" }}>
               {/* User Card */}
               <div className="card bg-black border-secondary mb-4">
                 <div className="card-body text-center py-4">
@@ -282,15 +294,15 @@ function CustomerDashBoard() {
               <div className="card bg-black border-secondary">
                 <div className="card-body p-2">
                   <div className="d-grid gap-2">
-                    <button 
-                      className={`btn d-flex align-items-center justify-content-start gap-2 ${activeTab === 'home' ? 'btn-primary' : 'btn-outline-light'}`}
-                      onClick={() => setActiveTab('home')}
+                    <button
+                      className={`btn d-flex align-items-center justify-content-start gap-2 ${activeTab === "home" ? "btn-primary" : "btn-outline-light"}`}
+                      onClick={() => setActiveTab("home")}
                     >
                       <BookOpen size={18} /> Browse Books
                     </button>
-                    <button 
-                      className={`btn d-flex align-items-center justify-content-start gap-2 ${activeTab === 'orders' ? 'btn-primary' : 'btn-outline-light'}`}
-                      onClick={() => setActiveTab('orders')}
+                    <button
+                      className={`btn d-flex align-items-center justify-content-start gap-2 ${activeTab === "orders" ? "btn-primary" : "btn-outline-light"}`}
+                      onClick={() => setActiveTab("orders")}
                     >
                       <Box size={18} /> My Orders
                     </button>
@@ -302,7 +314,7 @@ function CustomerDashBoard() {
 
           {/* MAIN CONTENT AREA */}
           <div className="col-lg-9">
-            {activeTab === 'home' ? (
+            {activeTab === "home" ? (
               <BookStoreHome />
             ) : (
               /* ORDERS VIEW */
@@ -311,14 +323,20 @@ function CustomerDashBoard() {
                   <h5 className="mb-0 d-flex align-items-center gap-2">
                     <ShoppingBag size={20} /> My Orders
                   </h5>
-                  <button className="btn btn-sm btn-outline-light" onClick={fetchMyOrders}>
+                  <button
+                    className="btn btn-sm btn-outline-light"
+                    onClick={fetchMyOrders}
+                  >
                     Refresh
                   </button>
                 </div>
                 <div className="card-body">
                   {loadingOrders ? (
                     <div className="text-center py-5">
-                      <div className="spinner-border text-primary" role="status">
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      >
                         <span className="visually-hidden">Loading...</span>
                       </div>
                     </div>
@@ -327,7 +345,10 @@ function CustomerDashBoard() {
                       <Box size={48} className="mb-3 opacity-50" />
                       <h5>No Orders Found</h5>
                       <p>You haven't placed any orders yet.</p>
-                      <button className="btn btn-primary mt-2" onClick={() => setActiveTab('home')}>
+                      <button
+                        className="btn btn-primary mt-2"
+                        onClick={() => setActiveTab("home")}
+                      >
                         Start Shopping
                       </button>
                     </div>
@@ -347,23 +368,38 @@ function CustomerDashBoard() {
                           {orders.map((order) => (
                             <tr key={order._id} className="border-secondary">
                               <td className="fw-bold text-info">
-                                #{order._id.substring(order._id.length - 8).toUpperCase()}
+                                #
+                                {order._id
+                                  .substring(order._id.length - 8)
+                                  .toUpperCase()}
                               </td>
                               <td>
-                                {new Date(order.createdAt).toLocaleDateString('en-US', {
-                                  year: 'numeric', month: 'short', day: 'numeric'
-                                })}
+                                {new Date(order.createdAt).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  },
+                                )}
                               </td>
                               <td>
                                 {order.items.map((item, idx) => (
                                   <div key={idx} className="small">
-                                    {item.name} <span className="text-white-50">(x{item.quantity})</span>
+                                    {item.name}{" "}
+                                    <span className="text-white-50">
+                                      (x{item.quantity})
+                                    </span>
                                   </div>
                                 ))}
                               </td>
-                              <td className="fw-bold">${order.totalAmount.toFixed(2)}</td>
+                              <td className="fw-bold">
+                                ${order.totalAmount.toFixed(2)}
+                              </td>
                               <td>
-                                <span className={`badge bg-${getStatusColor(order.status)} text-capitalize`}>
+                                <span
+                                  className={`badge bg-${getStatusColor(order.status)} text-capitalize`}
+                                >
                                   {order.status}
                                 </span>
                               </td>
