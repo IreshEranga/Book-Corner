@@ -1,6 +1,3 @@
-// frontend/src/pages/AdminPanel.jsx
-// UPDATED WITH STICKY SIDEBAR (never scrolls away)
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -22,6 +19,7 @@ import {
   Edit2, Trash2, Search 
 } from 'lucide-react';
 import BookManagement from '../Components/Admin/BookManagement';
+import OrderManagement from '../Components/Admin/OrderManagement';
 import logo from '../../assets/logo.png';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -275,8 +273,10 @@ function AdminPanel() {
         }
 
 
-        {/* Orders Placeholders */}
-        {currentSection === 'orders' && <div className="text-center py-5"><ShoppingCart size={80} className="text-purple mb-4" /><h3>Orders</h3><p className="text-white-50">Coming soon...</p></div>}
+        {/* Orders Component - UPDATED */}
+        {currentSection === 'orders' && 
+          <OrderManagement />
+        }
       </div>
 
       {/* EDIT MODAL */}
