@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import BookManagement from '../Components/Admin/BookManagement';
 import OrderManagement from '../Components/Admin/OrderManagement';
+// COLLAB-SAFE: Reusing notification UI component in admin header.
+import NotificationPanel from '../Components/Customer/NotificationPanel';
 import logo from '../../assets/logo.png';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -174,9 +176,13 @@ function AdminPanel() {
       <div className="flex-grow-1 p-4 overflow-auto" style={{ height: '100vh' }}>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold">{menuItems.find(m => m.id === currentSection).label}</h2>
-          <button onClick={fetchAllData} className="btn btn-outline-light d-flex align-items-center gap-2">
-            <RefreshCw size={18} /> Refresh All
-          </button>
+          {/* COLLAB-SAFE: Added admin notification access in header actions. */}
+          <div className="d-flex align-items-center gap-2">
+            <NotificationPanel />
+            <button onClick={fetchAllData} className="btn btn-outline-light d-flex align-items-center gap-2">
+              <RefreshCw size={18} /> Refresh All
+            </button>
+          </div>
         </div>
 
         {/* Overview Section */}

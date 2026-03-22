@@ -139,6 +139,8 @@ import Swal from 'sweetalert2';
 import { User, LogOut, BookOpen, ShoppingBag, Box, Eye } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import BookStoreHome from '../Components/Customer/BookStoreHome';
+// COLLAB-SAFE: Added notification UI component import.
+import NotificationPanel from '../Components/Customer/NotificationPanel';
 
 const ORDER_API = import.meta.env.VITE_ORDER_API || 'http://localhost:3003/api/orders';
 
@@ -245,6 +247,9 @@ function CustomerDashBoard() {
               <span className="fw-medium">{user.username}</span>
               <span className="badge bg-success">Customer</span>
             </div>
+
+            {/* COLLAB-SAFE: Added notification entry point in top navigation. */}
+            <NotificationPanel />
 
             <button
               onClick={handleLogout}
