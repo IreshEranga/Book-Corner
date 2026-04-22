@@ -1,5 +1,5 @@
-# Stage 1: Build the React application
-FROM node:18-alpine AS build
+# Stage 1: Build the React application (UPGRADED TO NODE 20)
+FROM node:20-alpine AS build
 WORKDIR /app
 
 # Copy package files and install
@@ -9,7 +9,7 @@ RUN npm install
 # Copy all the frontend code
 COPY . .
 
-# CRITICAL FIX: Add CI=false so minor warnings don't crash the pipeline!
+# Add CI=false so minor warnings don't crash the pipeline
 RUN CI=false npm run build 
 
 # Stage 2: Serve with Nginx
