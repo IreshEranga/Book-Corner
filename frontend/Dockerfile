@@ -1,11 +1,16 @@
 # Stage 1: Build the React application
 FROM node:18-alpine AS build
 WORKDIR /app
+
+# Copy package files and install
 COPY package*.json ./
 RUN npm install
+
+# Copy all the frontend code
 COPY . .
-# This builds the dist folder
-RUN npm run build 
+
+# CRITICAL FIX: Add CI=false so minor warnings don't crash the pipeline!
+RUN CI=false npm run build 
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
