@@ -82,7 +82,7 @@ function Auth() {
           return;
         }
 
-        await axios.post(`${API_BASE}/auth/register`, {
+        await axios.post(`${API_BASE}/register`, {
           username: formData.username,
           email: formData.email,
           password: formData.password,
