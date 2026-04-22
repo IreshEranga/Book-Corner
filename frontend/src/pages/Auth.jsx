@@ -39,7 +39,7 @@ function Auth() {
     try {
       if (isLogin) {
         // ==================== LOGIN WITH ROLE-BASED NAVIGATION ====================
-        const res = await axios.post(`${API_BASE}/auth/login`, {
+        const res = await axios.post(`${API_BASE}/login`, {
           email: formData.email,
           password: formData.password
         });
