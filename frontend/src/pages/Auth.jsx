@@ -11,7 +11,7 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 
 import logo from '../assets/logo.png';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_AUTH_API || 'http://localhost:3001/api';
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);

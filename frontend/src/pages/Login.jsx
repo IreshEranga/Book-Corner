@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const USER_API = 'http://localhost:3001/api/auth';
+const USER_API =  import.meta.env.VITE_AUTH_API || 'http://localhost:3001/api' ;
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -12,7 +12,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${USER_API}/login`, { email, password });
+      const res = await axios.post(`${USER_API}/auth/login`, { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role);
       navigate('/dashboard');
