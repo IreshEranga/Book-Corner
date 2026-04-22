@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const USER_API =  import.meta.env.VITE_AUTH_API || 'http://localhost:3001/api' ;
+const USER_API =  import.meta.env.VITE_AUTH_API;
 
 function Login() {
   const [email, setEmail] = useState('');
