@@ -140,7 +140,7 @@ import { User, LogOut, BookOpen, ShoppingBag, Box, Eye } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import BookStoreHome from '../Components/Customer/BookStoreHome';
 
-const ORDER_API = import.meta.env.VITE_ORDER_API || 'http://localhost:3003/api/orders';
+const ORDER_API = import.meta.env.VITE_ORDER_API;
 
 function CustomerDashBoard() {
   const [user, setUser] = useState({ username: '', role: 'customer' });
