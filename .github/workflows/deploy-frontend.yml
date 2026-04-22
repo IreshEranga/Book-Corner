@@ -23,8 +23,8 @@ jobs:
           
       - name: Inject Environment Variables
         run: |
-          echo "VITE_AUTH_API=http://13.239.20.254:3001/api/auth" >> ./frontend/.env
-          echo "VITE_ORDER_API=http://51.20.1.145:3003/api/orders" >> ./frontend/.env
+          echo "VITE_AUTH_API=http://54.253.87.17:3001/api/auth" >> ./frontend/.env
+          echo "VITE_ORDER_API=http://13.61.178.111:3003/api/orders" >> ./frontend/.env
           echo "VITE_BOOK_API=http://13.232.85.230:3000/health" >> ./frontend/.env
           echo "VITE_NOTIFICATION_API=http://51.20.1.145:3004/api/notifications" >> ./frontend/.env
           
