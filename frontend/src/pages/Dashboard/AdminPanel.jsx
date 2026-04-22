@@ -24,7 +24,7 @@ import logo from '../../assets/logo.png';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_AUTH_API;
 
 function AdminPanel() {
   const [currentSection, setCurrentSection] = useState('overview');
