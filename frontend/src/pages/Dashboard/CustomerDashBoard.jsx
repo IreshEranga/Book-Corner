@@ -144,30 +144,25 @@ const ORDER_API = import.meta.env.VITE_ORDER_API;
 
 function CustomerDashBoard() {
   const [user, setUser] = useState({ username: '', role: 'customer' });
-  const [activeTab, setActiveTab] = useState('home'); // 'home' or 'orders'
+  const [activeTab, setActiveTab] = useState('home');
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username') || 'BookLover';
-    const role = localStorage.getItem('role') || 'customer';
-
     if (!token) {
       navigate('/login');
       return;
     }
-
-    setUser({ username, role });
+    setUser({ 
+      username: localStorage.getItem('username') || 'BookLover', 
+      role: localStorage.getItem('role') || 'customer' 
+    });
   }, [navigate]);
 
-  // Fetch orders when the tab switches to 'orders'
   useEffect(() => {
-    if (activeTab === 'orders') {
-      fetchMyOrders();
-    }
+    if (activeTab === 'orders') fetchMyOrders();
   }, [activeTab]);
 
   const fetchMyOrders = async () => {
@@ -175,22 +170,26 @@ function CustomerDashBoard() {
     const token = localStorage.getItem('token');
     
     try {
+      // NOTE: Ensure ORDER_API ends in /api/orders
       const response = await fetch(`${ORDER_API}/my`, {
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
       });
 
+      if (response.status === 403) throw new Error('Session expired or unauthorized (403)');
       if (!response.ok) throw new Error('Failed to fetch orders');
       
       const data = await response.json();
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(error);
+      console.error("Order Fetch Error:", error);
       Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: 'Could not load your orders.',
+        title: 'Access Denied',
+        text: error.message,
         background: '#1e2937',
         color: '#fff',
       });
