@@ -1,36 +1,67 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, BookOpen, ShoppingBag, Box, Eye } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import BookStoreHome from '../Components/Customer/BookStoreHome';
 
+const ORDER_API = import.meta.env.VITE_ORDER_API;
+
 function CustomerDashBoard() {
   const [user, setUser] = useState({ username: '', role: 'customer' });
+  const [activeTab, setActiveTab] = useState('home');
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username') || 'BookLover';
-    const role = localStorage.getItem('role') || 'customer';
-
     if (!token) {
       navigate('/login');
       return;
     }
-
-    setUser({ username, role });
-
-    Swal.fire({
-      icon: 'success',
-      title: `Welcome back, ${username}!`,
-      text: 'Explore books and enjoy your shopping experience.',
-      timer: 2000,
-      showConfirmButton: false,
-      background: '#1e2937',
-      color: '#fff',
+    setUser({ 
+      username: localStorage.getItem('username') || 'BookLover', 
+      role: localStorage.getItem('role') || 'customer' 
     });
   }, [navigate]);
+
+  useEffect(() => {
+    if (activeTab === 'orders') fetchMyOrders();
+  }, [activeTab]);
+
+  const fetchMyOrders = async () => {
+    setLoadingOrders(true);
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(`${ORDER_API}/my`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (response.status === 401) throw new Error('No token provided. Please log in again.');
+      if (response.status === 403) throw new Error('JWT Secret Mismatch or Expired Token (403)');
+      if (!response.ok) throw new Error(`Server returned ${response.status}`);
+      
+      const data = await response.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Order Fetch Error:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Access Denied',
+        text: error.message,
+        background: '#1e2937',
+        color: '#fff',
+      });
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
 
   const handleLogout = () => {
     Swal.fire({
@@ -41,12 +72,25 @@ function CustomerDashBoard() {
       confirmButtonColor: '#7c3aed',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, Logout',
+      background: '#1e2937',
+      color: '#fff',
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.clear();
         navigate('/login');
       }
     });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'confirmed': return 'info';
+      case 'shipped': return 'primary';
+      case 'delivered': return 'success';
+      case 'cancelled': return 'danger';
+      default: return 'secondary';
+    }
   };
 
   return (
@@ -79,52 +123,124 @@ function CustomerDashBoard() {
       {/* MAIN LAYOUT */}
       <div className="container py-4">
         <div className="row">
-          {/* MAIN CONTENT AREA */}
-          <div className="col-lg-9">
-            <BookStoreHome />
-          </div>
-
-          {/* RIGHT SIDEBAR */}
-          <div className="col-lg-3">
-            <div className="sticky-top" style={{ top: '90px' }}>
-              <div className="card bg-black border-0 shadow mb-4">
+          {/* LEFT SIDEBAR - Controls */}
+          <div className="col-lg-3 mb-4 mb-lg-0">
+             <div className="sticky-top" style={{ top: '90px' }}>
+              {/* User Card */}
+              <div className="card bg-black border-secondary mb-4">
                 <div className="card-body text-center py-4">
-                  <h6 className="text-white-50 mb-1">Your Reading Points</h6>
-                  <h2 className="fw-bold text-purple mb-0">1,245</h2>
-                  <small className="text-success">+120 this month</small>
+                  <div className="bg-secondary bg-opacity-25 rounded-circle d-inline-flex p-3 mb-3">
+                    <User size={32} className="text-purple" />
+                  </div>
+                  <h5 className="mb-0">{user.username}</h5>
+                  <small className="text-white-50">Customer Dashboard</small>
                 </div>
               </div>
 
-              <div className="card bg-black border-0 shadow mb-4">
-                <div className="card-body">
-                  <h6 className="mb-3">Quick Links</h6>
+              {/* Navigation Menu */}
+              <div className="card bg-black border-secondary">
+                <div className="card-body p-2">
                   <div className="d-grid gap-2">
-                    <button className="btn btn-outline-light text-start">📖 My Orders</button>
-                    <button className="btn btn-outline-light text-start">❤️ Wishlist</button>
-                    <button className="btn btn-outline-light text-start">🛒 Cart</button>
-                    <button className="btn btn-outline-light text-start">📚 Reading List</button>
+                    <button 
+                      className={`btn d-flex align-items-center justify-content-start gap-2 ${activeTab === 'home' ? 'btn-primary' : 'btn-outline-light'}`}
+                      onClick={() => setActiveTab('home')}
+                    >
+                      <BookOpen size={18} /> Browse Books
+                    </button>
+                    <button 
+                      className={`btn d-flex align-items-center justify-content-start gap-2 ${activeTab === 'orders' ? 'btn-primary' : 'btn-outline-light'}`}
+                      onClick={() => setActiveTab('orders')}
+                    >
+                      <Box size={18} /> My Orders
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div className="bg-gradient-to-br from-purple-900 to-indigo-900 p-4 rounded-4 text-center">
-                <h6 className="mb-3">Recommended for you</h6>
-                <img
-                  src="https://picsum.photos/id/201/280/180"
-                  className="rounded-3 mb-3"
-                  style={{ width: '100%' }}
-                  alt="Recommended Book"
-                />
-                <p className="fw-medium mb-1">Project Hail Mary</p>
-                <small className="text-white-50">Andy Weir • Sci-Fi</small>
-              </div>
             </div>
+          </div>
+
+          {/* MAIN CONTENT AREA */}
+          <div className="col-lg-9">
+            {activeTab === 'home' ? (
+              <BookStoreHome />
+            ) : (
+              /* ORDERS VIEW */
+              <div className="card bg-black border-secondary">
+                <div className="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
+                  <h5 className="mb-0 d-flex align-items-center gap-2">
+                    <ShoppingBag size={20} /> My Orders
+                  </h5>
+                  <button className="btn btn-sm btn-outline-light" onClick={fetchMyOrders}>
+                    Refresh
+                  </button>
+                </div>
+                <div className="card-body">
+                  {loadingOrders ? (
+                    <div className="text-center py-5">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
+                  ) : orders.length === 0 ? (
+                    <div className="text-center py-5 text-white-50">
+                      <Box size={48} className="mb-3 opacity-50" />
+                      <h5>No Orders Found</h5>
+                      <p>You haven't placed any orders yet.</p>
+                      <button className="btn btn-primary mt-2" onClick={() => setActiveTab('home')}>
+                        Start Shopping
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                          <tr className="border-secondary text-white-50">
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orders.map((order) => (
+                            <tr key={order._id} className="border-secondary">
+                              <td className="fw-bold text-info">
+                                #{order._id.substring(order._id.length - 8).toUpperCase()}
+                              </td>
+                              <td>
+                                {new Date(order.createdAt).toLocaleDateString('en-US', {
+                                  year: 'numeric', month: 'short', day: 'numeric'
+                                })}
+                              </td>
+                              <td>
+                                {order.items.map((item, idx) => (
+                                  <div key={idx} className="small">
+                                    {item.name} <span className="text-white-50">(x{item.quantity})</span>
+                                  </div>
+                                ))}
+                              </td>
+                              <td className="fw-bold">${order.totalAmount.toFixed(2)}</td>
+                              <td>
+                                <span className={`badge bg-${getStatusColor(order.status)} text-capitalize`}>
+                                  {order.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* FOOTER */}
-      <footer className="bg-black py-4 text-center text-white-50 small">
+      <footer className="bg-black py-4 text-center text-white-50 small mt-auto">
         © 2026 BookCorner • Built for SE4010 Assignment • All rights reserved
       </footer>
     </div>

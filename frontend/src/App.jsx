@@ -1,28 +1,59 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
 import Auth from './pages/Auth';
-
 import AdminPanel from './pages/Dashboard/AdminPanel';
-/*customer routes*/
 import CustomerDashBoard from './pages/Dashboard/CustomerDashBoard';
-// import Register from './pages/Register';
-// import Dashboard from './pages/Dashboard';
+import OrderPage from './pages/Components/Customer/OrderPage';
+
+// --- PROTECTED ROUTE COMPONENT ---
+// This guarantees React checks for the token exactly when the page loads,
+// preventing the bug where you get kicked back to the login screen.
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
 
 function App() {
-  const token = localStorage.getItem('token');
-
   return (
     <Router>
       <Routes>
-        {/* <Route path="/login" element={<Login />} /> */}
+        {/* Public Route */}
         <Route path="/login" element={<Auth />} />
-        {/* <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} /> */}
-        <Route path="*" element={<Navigate to="/login" />} />
 
-          {/* Customer Routes */}
-        <Route path="/dashboard" element={token ? <CustomerDashBoard /> : <Navigate to="/login" />} />
-        <Route path="/admin" element={token ? <AdminPanel /> : <Navigate to="/login" />} />
+        {/* --- PROTECTED ROUTES --- */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <CustomerDashBoard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute>
+              <AdminPanel />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/order" 
+          element={
+            <ProtectedRoute>
+              <OrderPage />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Catch-All Route (Must be at the very bottom!) */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
