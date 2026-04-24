@@ -9,7 +9,6 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 
 import logo from '../assets/logo.png';
 
-// Make sure your .env has VITE_AUTH_API=http://<YOUR_IP>:3001/api/auth
 const API_BASE = import.meta.env.VITE_AUTH_API;
 
 function Auth() {

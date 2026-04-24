@@ -4,7 +4,6 @@ import Swal from 'sweetalert2';
 import { motion } from 'framer-motion';
 import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, AlertCircle } from 'lucide-react';
 
-// Adjust this if your Order Service runs on a different port
 const ORDER_API = import.meta.env.VITE_ORDER_API;
 
 function OrderPage() {
