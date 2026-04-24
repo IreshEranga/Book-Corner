@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { Truck, Package, CheckCircle, XCircle, Clock, RefreshCw, Eye } from 'lucide-react';
 
-const ORDER_API = import.meta.env.VITE_ORDER_API || 'http://localhost:3003/api/orders';
+const ORDER_API = import.meta.env.VITE_ORDER_API;
 
 function OrderManagement() {
   const [orders, setOrders] = useState([]);

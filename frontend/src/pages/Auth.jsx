@@ -1,6 +1,4 @@
 // frontend/src/pages/Auth.jsx
-// UPDATED WITH ROLE-BASED NAVIGATION (Customer / Admin / Owner)
-
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +9,8 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 
 import logo from '../assets/logo.png';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+// Make sure your .env has VITE_AUTH_API=http://<YOUR_IP>:3001/api/auth
+const API_BASE = import.meta.env.VITE_AUTH_API;
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -38,8 +37,9 @@ function Auth() {
 
     try {
       if (isLogin) {
-        // ==================== LOGIN WITH ROLE-BASED NAVIGATION ====================
-        const res = await axios.post(`${API_BASE}/auth/login`, {
+        // ==================== LOGIN ====================
+        // Notice we are just using /login here, not /auth/login!
+        const res = await axios.post(`${API_BASE}/login`, {
           email: formData.email,
           password: formData.password
         });
@@ -47,18 +47,17 @@ function Auth() {
         // Store data
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('role', res.data.role);
-        localStorage.setItem('userId', res.data.userId);
-        // username is not returned from backend yet - using email as fallback
+        localStorage.setItem('userId', res.data.userId || res.data.user?.id);
         localStorage.setItem('username', formData.email.split('@')[0]);
 
         const role = res.data.role;
 
-        // SweetAlert with role-specific message
+        // SweetAlert message
         await Swal.fire({
           icon: 'success',
           title: 'Login Successful!',
           text: `Welcome back, ${role.charAt(0).toUpperCase() + role.slice(1)}! Redirecting...`,
-          timer: 2200,
+          timer: 2000,
           showConfirmButton: false,
           background: '#1e2937',
           color: '#fff'
@@ -74,19 +73,20 @@ function Auth() {
         } else {
           navigate('/dashboard'); // fallback
         }
+
       } else {
-        // ==================== REGISTER (CUSTOMER ONLY) ====================
+        // ==================== REGISTER ====================
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
           setLoading(false);
           return;
         }
 
-        await axios.post(`${API_BASE}/auth/register`, {
+        await axios.post(`${API_BASE}/register`, {
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          role: 'customer'
+          role: 'customer' // Hardcoded default role for public registration
         });
 
         await Swal.fire({
@@ -103,7 +103,8 @@ function Auth() {
         setFormData({ username: '', email: '', password: '', confirmPassword: '' });
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+      console.error("Auth Error:", err);
+      setError(err.response?.data?.message || 'Something went wrong. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

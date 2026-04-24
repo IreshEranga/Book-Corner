@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 import { motion } from 'framer-motion';
 import { Search, BookOpen, ShoppingCart, Eye } from 'lucide-react';
 
-const BOOK_API = import.meta.env.VITE_BOOK_API || 'http://localhost:3000/books';
+const BOOK_API = import.meta.env.VITE_BOOK_API;
 
 function BookStoreHome() {
   const navigate = useNavigate();
