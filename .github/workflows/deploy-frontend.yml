@@ -25,8 +25,8 @@ jobs:
         run: |
           echo "VITE_AUTH_API=http://13.236.95.239:3001/api/auth" >> ./frontend/.env
           echo "VITE_ORDER_API=http://16.16.160.165:3003/api/orders" >> ./frontend/.env
-          echo "VITE_BOOK_API=http://13.232.85.230:3000/health" >> ./frontend/.env
-          echo "VITE_NOTIFICATION_API=http://51.20.1.145:3004/api/notifications" >> ./frontend/.env
+          echo "VITE_BOOK_API=http://52.66.83.86:3000/books" >> ./frontend/.env
+          echo "VITE_NOTIFICATION_API=http://book-corner-notification-alb-2102855476.ap-south-1.elb.amazonaws.com/" >> ./frontend/.env
           
       - name: Build and Push Docker Image
         # Tells Docker to build specifically from the frontend folder
