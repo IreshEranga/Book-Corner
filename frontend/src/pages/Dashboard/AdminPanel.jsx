@@ -41,8 +41,9 @@ ChartJS.register(
   Legend,
 );
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+// Get the raw IP/Port by removing '/api/auth' from the end of the VITE_AUTH_API variable
+const API_BASE_RAW = import.meta.env.VITE_AUTH_API.replace('/api/auth', '');
+const ADMIN_API = `${API_BASE_RAW}/api/admin/users`;
 
 function AdminPanel() {
   const [currentSection, setCurrentSection] = useState("overview");
@@ -82,31 +83,32 @@ function AdminPanel() {
     setLoading(true);
     try {
       const params = new URLSearchParams(filters);
-      const usersRes = await axios.get(`${API_BASE}/admin/users?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      
+      // Using the corrected ADMIN_API route
+      const usersRes = await axios.get(`${ADMIN_API}?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(usersRes.data.users || []);
       setPagination(usersRes.data.pagination || {});
 
-      const statsRes = await axios.get(`${API_BASE}/admin/users/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const statsRes = await axios.get(`${ADMIN_API}/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       setStats(statsRes.data);
       setMonthlyData(statsRes.data.monthly || []);
     } catch (err) {
-      Swal.fire(
-        "Error",
-        err.response?.data?.message || "Failed to load data",
-        "error",
-      );
+      console.error(err);
+      Swal.fire('Error', err.response?.data?.message || 'Failed to load data', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (token) fetchAllData();
-  }, [filters, token]);
+    if (token && role === 'admin') {
+      fetchAllData();
+    }
+  }, [filters, token, role]);
 
   const chartData = {
     labels: monthlyData.map((item) => item.month),
@@ -146,8 +148,9 @@ function AdminPanel() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.patch(`${API_BASE}/admin/users/${editUser.id}`, modalForm, {
-        headers: { Authorization: `Bearer ${token}` },
+      // Using the corrected ADMIN_API route
+      await axios.patch(`${ADMIN_API}/${editUser.id || editUser._id}`, modalForm, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire("Success", "User updated!", "success");
       setEditUser(null);
@@ -172,10 +175,11 @@ function AdminPanel() {
     });
     if (result.isConfirmed) {
       try {
-        await axios.delete(`${API_BASE}/admin/users/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        // Using the corrected ADMIN_API route
+        await axios.delete(`${ADMIN_API}/${id}`, { 
+          headers: { Authorization: `Bearer ${token}` } 
         });
-        Swal.fire("Deleted!", "User removed.", "success");
+        Swal.fire('Deleted!', 'User removed.', 'success');
         fetchAllData();
       } catch (err) {
         Swal.fire("Error", "Delete failed", "error");
@@ -191,7 +195,7 @@ function AdminPanel() {
         style={{ height: "100vh", overflowY: "auto" }}
       >
         <div className="d-flex align-items-center gap-3 mb-5">
-          <img src={logo} width="48" className="rounded-circle" />
+          <img src={logo} width="48" className="rounded-circle" alt="Logo" />
           <h4 className="text-purple fw-bold mb-0">BookCorner Admin</h4>
         </div>
 
@@ -213,8 +217,8 @@ function AdminPanel() {
         </div>
 
         <div className="mt-auto pt-4">
-          <button
-            onClick={() => navigate("/login")}
+          <button 
+            onClick={() => { localStorage.clear(); navigate('/login'); }} 
             className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2"
           >
             <LogOut size={18} /> Logout
@@ -228,19 +232,10 @@ function AdminPanel() {
         style={{ height: "100vh" }}
       >
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="fw-bold">
-            {menuItems.find((m) => m.id === currentSection).label}
-          </h2>
-          {/* COLLAB-SAFE: Added admin notification access in header actions. */}
-          <div className="d-flex align-items-center gap-2">
-            <NotificationPanel />
-            <button
-              onClick={fetchAllData}
-              className="btn btn-outline-light d-flex align-items-center gap-2"
-            >
-              <RefreshCw size={18} /> Refresh All
-            </button>
-          </div>
+          <h2 className="fw-bold">{menuItems.find(m => m.id === currentSection)?.label}</h2>
+          <button onClick={fetchAllData} className="btn btn-outline-light d-flex align-items-center gap-2">
+            <RefreshCw size={18} /> Refresh All
+          </button>
         </div>
 
         {/* Overview Section */}
@@ -286,8 +281,8 @@ function AdminPanel() {
           </div>
         )}
 
-        {/* Users Management Section - Full Table */}
-        {currentSection === "users" && (
+        {/* Users Management Section */}
+        {currentSection === 'users' && (
           <>
             {/* Filters */}
             <div className="card bg-black mb-4">
@@ -348,51 +343,21 @@ function AdminPanel() {
                     </tr>
                   </thead>
                   <tbody>
-                    {loading ? (
-                      <tr>
-                        <td colSpan="6" className="text-center py-5">
-                          Loading...
-                        </td>
-                      </tr>
-                    ) : users.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="text-center py-5">
-                          No users found
-                        </td>
-                      </tr>
-                    ) : (
-                      users.map((user) => (
-                        <tr key={user.id}>
-                          <td>{user.id}</td>
-                          <td>{user.username}</td>
-                          <td>{user.email}</td>
-                          <td>
-                            <span
-                              className={`badge ${user.role === "admin" ? "bg-danger" : user.role === "owner" ? "bg-warning" : "bg-success"}`}
-                            >
-                              {user.role}
-                            </span>
-                          </td>
-                          <td>
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="text-end">
-                            <button
-                              onClick={() => openEditModal(user)}
-                              className="btn btn-sm btn-outline-light me-2"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(user.id)}
-                              className="btn btn-sm btn-outline-danger"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
+                    {loading ? <tr><td colSpan="6" className="text-center py-5">Loading...</td></tr> : 
+                     users.length === 0 ? <tr><td colSpan="6" className="text-center py-5">No users found</td></tr> :
+                     users.map(user => (
+                       <tr key={user.id || user._id}>
+                         <td>{user.id || user._id}</td>
+                         <td>{user.username}</td>
+                         <td>{user.email}</td>
+                         <td><span className={`badge ${user.role === 'admin' ? 'bg-danger' : user.role === 'owner' ? 'bg-warning' : 'bg-success'}`}>{user.role}</span></td>
+                         <td>{new Date(user.created_at || user.createdAt).toLocaleDateString()}</td>
+                         <td className="text-end">
+                           <button onClick={() => openEditModal(user)} className="btn btn-sm btn-outline-light me-2"><Edit2 size={16} /></button>
+                           <button onClick={() => handleDelete(user.id || user._id)} className="btn btn-sm btn-outline-danger"><Trash2 size={16} /></button>
+                         </td>
+                       </tr>
+                     ))}
                   </tbody>
                 </table>
               </div>
@@ -425,15 +390,15 @@ function AdminPanel() {
           </>
         )}
 
-        {/* Book Service Component */}
-        {currentSection === "books" && (
+        {/* Book Management Component */}
+        {currentSection === 'books' && (
           <div className="text-center py-5">
             <BookManagement />
           </div>
         )}
 
-        {/* Orders Component - UPDATED */}
-        {currentSection === "orders" && <OrderManagement />}
+        {/* Orders Management Component */}
+        {currentSection === 'orders' && <OrderManagement />}
       </div>
 
       {/* EDIT MODAL */}
@@ -445,11 +410,8 @@ function AdminPanel() {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content bg-dark text-white">
               <div className="modal-header border-0">
-                <h5>Edit User #{editUser.id}</h5>
-                <button
-                  className="btn-close btn-close-white"
-                  onClick={() => setEditUser(null)}
-                ></button>
+                <h5>Edit User #{editUser.id || editUser._id}</h5>
+                <button className="btn-close btn-close-white" onClick={() => setEditUser(null)}></button>
               </div>
               <form onSubmit={handleEditSubmit}>
                 <div className="modal-body">

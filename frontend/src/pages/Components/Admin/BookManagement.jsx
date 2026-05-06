@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Plus, Pencil, Trash2, BookOpen, RefreshCw } from 'lucide-react';
 
-const BOOK_API = import.meta.env.VITE_BOOK_API || 'http://localhost:3000/books';
+const BOOK_API = import.meta.env.VITE_BOOK_API;
 
 const initialForm = {
   title: '',
